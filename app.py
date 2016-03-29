@@ -2,7 +2,7 @@
 # example data
 
 from models import Invoice
-
+import os, inspect
 
 data = {
     'lines': [
@@ -36,6 +36,6 @@ data = {
     ]
 }
 
-doc = Invoice(data)
+doc = Invoice(data, 'F001-23.xml')
 doc.render()
 print doc.send()
