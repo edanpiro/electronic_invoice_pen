@@ -1,6 +1,8 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
 
 import os
+
+from client import Client
 from models import Invoice
 
 data = {
@@ -34,7 +36,3 @@ data = {
         }
     ]
 }
-
-doc = Invoice(data, 'F001-23')
-doc.render()
-print doc.send()
