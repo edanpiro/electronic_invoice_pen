@@ -50,14 +50,15 @@ class Document(object):
 
         root = etree.fromstring(self._xml.encode('ISO-8859-1'), parser=etree.XMLParser(encoding='ISO-8859-1'))
         signed_root = xmldsig(root, digest_algorithm='sha1').sign(algorithm='rsa-sha1', key=key, cert=cert)
-        self._xml = str(etree.tostring(signed_root))
+        self._xml = etree.tostring(signed_root, encoding='ISO-8859-1')
         # print(xmldsig(signed_root).verify().signed_xml)
-        print(xmldsig(signed_root).verify())
+        # print(xmldsig(signed_root).verify())
 
     def prepare_zip(self):
         self._zip_filename = '{}.zip'.format(self._document_name)
         zf = zipfile.ZipFile(self._zip_filename, mode='w', compression=zipfile.ZIP_DEFLATED)
-        zf.writestr(self._document_name, self._xml)
+        nx = '{}{}'.format(self._document_name, '.xml')
+        zf.writestr(nx, self._xml)
         zf.close()
         self._zip_path = os.path.join(path_dir, self._zip_filename)
 
