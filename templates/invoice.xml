@@ -19,18 +19,10 @@
         <ext:UBLExtension>
             <ext:ExtensionContent>
                 <sac:AdditionalInformation>
-                    <sac:AdditionalMonetaryTotal>
-                        <cbc:ID>1001</cbc:ID>
-                        <cbc:PayableAmount currencyID="PEN">55330.31</cbc:PayableAmount>
-                    </sac:AdditionalMonetaryTotal>
-                    <sac:AdditionalMonetaryTotal>
-                        <cbc:ID>1002</cbc:ID>
-                        <cbc:PayableAmount currencyID="PEN">0.00</cbc:PayableAmount>
-                    </sac:AdditionalMonetaryTotal>
-                    <sac:AdditionalMonetaryTotal>
-                        <cbc:ID>1003</cbc:ID>
-                        <cbc:PayableAmount currencyID="PEN">0.00</cbc:PayableAmount>
-                    </sac:AdditionalMonetaryTotal>
+                    {% for cata in catalog%}<sac:AdditionalMonetaryTotal>
+                        <cbc:ID>{{ cata.code }}</cbc:ID>
+                        <cbc:PayableAmount currencyID="PEN">{{ cata.mount }}</cbc:PayableAmount>
+                    </sac:AdditionalMonetaryTotal>{% endfor %}
                 </sac:AdditionalInformation>
             </ext:ExtensionContent>
         </ext:UBLExtension>
@@ -42,22 +34,24 @@
     </ext:UBLExtensions>
     <cbc:UBLVersionID>2.0</cbc:UBLVersionID>
     <cbc:CustomizationID>1.0</cbc:CustomizationID>
-    <cbc:ID>F017-0004579</cbc:ID>
-    <cbc:IssueDate>2015-08-28</cbc:IssueDate>
+    <cbc:ID>{{ voucher_number }}</cbc:ID>
+    <cbc:IssueDate>{{ issue_date }}</cbc:IssueDate>
     <cbc:InvoiceTypeCode>01</cbc:InvoiceTypeCode>
-    <cbc:DocumentCurrencyCode>PEN</cbc:DocumentCurrencyCode>
+    <cbc:DocumentCurrencyCode>{{ currency }}</cbc:DocumentCurrencyCode>
+    {% for refe in document_additional %}
     <cac:AdditionalDocumentReference>
-        <cbc:ID>000</cbc:ID>
-        <cbc:DocumentTypeCode>05</cbc:DocumentTypeCode>
+        <cbc:ID>{{ refe.id }}</cbc:ID>
+        <cbc:DocumentTypeCode>{{ refe.type_code }}</cbc:DocumentTypeCode>
+    {% endfor %}
     </cac:AdditionalDocumentReference>
     <cac:Signature>
         <cbc:ID>IDSign20143229816_01F0170004579</cbc:ID>
         <cac:SignatoryParty>
             <cac:PartyIdentification>
-                <cbc:ID>{{ supplier.ruc }}</cbc:ID>
+                <cbc:ID>{{ company.ruc }}</cbc:ID>
             </cac:PartyIdentification>
             <cac:PartyName>
-                <cbc:Name><![CDATA[{{ supplier.commercial_name }}]]></cbc:Name>
+                <cbc:Name><![CDATA[{{ company.name }}]]></cbc:Name>
             </cac:PartyName>
         </cac:SignatoryParty>
         <cac:DigitalSignatureAttachment>
@@ -67,21 +61,21 @@
         </cac:DigitalSignatureAttachment>
     </cac:Signature>
     <cac:AccountingSupplierParty>
-        <cbc:CustomerAssignedAccountID>{{ supplier.ruc }}</cbc:CustomerAssignedAccountID>
+        <cbc:CustomerAssignedAccountID>{{ company.ruc }}</cbc:CustomerAssignedAccountID>
         <cbc:AdditionalAccountID>6</cbc:AdditionalAccountID>
         <cac:Party>
             <cac:PartyName>
-                <cbc:Name><![CDATA[{{ supplier.name }}]]></cbc:Name>
+                <cbc:Name><![CDATA[{{ company.name }}]]></cbc:Name>
             </cac:PartyName>
             <cac:PostalAddress>
                 <cbc:ID>150101</cbc:ID>
-                <cbc:StreetName><![CDATA[{{ supplier.address }}]]></cbc:StreetName>
+                <cbc:StreetName><![CDATA[{{ company.address }}]]></cbc:StreetName>
                 <cac:Country>
                     <cbc:IdentificationCode>PE</cbc:IdentificationCode>
                 </cac:Country>
             </cac:PostalAddress>
             <cac:PartyLegalEntity>
-                <cbc:RegistrationName><![CDATA[{{ supplier.commercial_name }}]]></cbc:RegistrationName>
+                <cbc:RegistrationName><![CDATA[{{ company.name }}]]></cbc:RegistrationName>
             </cac:PartyLegalEntity>
         </cac:Party>
     </cac:AccountingSupplierParty>
@@ -93,7 +87,7 @@
                 <cbc:Description><![CDATA[{{ customer.address }}]]></cbc:Description>
             </cac:PhysicalLocation>
             <cac:PartyLegalEntity>
-                <cbc:RegistrationName><![CDATA[{{ customer.commercial_name }}]]></cbc:RegistrationName>
+                <cbc:RegistrationName><![CDATA[{{ customer.name }}]]></cbc:RegistrationName>
             </cac:PartyLegalEntity>
         </cac:Party>
     </cac:AccountingCustomerParty>
@@ -115,7 +109,7 @@
     </cac:LegalMonetaryTotal>
     {% for line in lines %}
     <cac:InvoiceLine>
-        <cbc:ID>{{ loop.counter }}</cbc:ID>
+        <cbc:ID>{{ loop.index }}</cbc:ID>
         <cbc:InvoicedQuantity unitCode="ZZ">{{ line.quantity }}</cbc:InvoicedQuantity>
         <cbc:LineExtensionAmount currencyID="PEN">{{ line.amount }}</cbc:LineExtensionAmount>
         <cac:PricingReference>
