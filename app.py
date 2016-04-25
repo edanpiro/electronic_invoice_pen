@@ -7,6 +7,8 @@ from models import Invoice
 
 client = Client('20600247736MODDATOS', 'MODDATOS', debug=True)
 
+file_name = '20600247736-01-F017-00004579'
+
 data = {
     'lines': [
         {
