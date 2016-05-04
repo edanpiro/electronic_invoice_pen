@@ -7,6 +7,7 @@ import zipfile
 from jinja2 import Template, FileSystemLoader, Environment
 from lxml import etree
 from signxml import xmldsig, methods
+from voluptuous import Schema, Required, All, Length, Range, ALLOW_EXTRA, Optional
 
 
 path_dir = os.path.dirname(os.path.realpath(__file__))
@@ -19,23 +20,29 @@ class Document(object):
 
     template_name = ''
 
-    def __init__(self, data, document_name, client):
+    def __init__(self, ruc, data, client):
+        self._ruc = ruc
         self._data = data
         self._xml = None
-        self._document_name = document_name
+        self._document_name = self.generate_document_name()
+        self._data.update({
+            'document_name': self._document_name,
+            'ruc': self._ruc,
+            'voucher_number': '{}-{}'.format(self._data['serial'], self._data['correlative'])
+        })
         self._client = client
         self._response = None
         self._zip_path = None
 
-    def validate(self):
+    def generate_document_name(self):
         """
-        implement data validation
+        implement document name generation
         """
         raise NotImplementedError
 
-    def get_filename(self):
+    def validate(self):
         """
-        implement filename generation by document
+        implement data validation
         """
         raise NotImplementedError
 
@@ -61,7 +68,7 @@ class Document(object):
     def prepare_zip(self):
         self._zip_filename = '{}.zip'.format(self._document_name)
         zf = zipfile.ZipFile(self._zip_filename, mode='w', compression=zipfile.ZIP_DEFLATED)
-        nx = '{}{}'.format(self._document_name, '.xml')
+        nx = '{}.xml'.format(self._document_name)
         zf.writestr(nx, self._xml)
         zf.close()
         self._zip_path = os.path.join(path_dir, self._zip_filename)
@@ -93,6 +100,44 @@ class Document(object):
 class Invoice(Document):
 
     template_name = 'invoice.xml'
+    voucher_type = ''
 
     def validate(self):
-        pass
+        supplier = Schema({
+            Required('ruc'): All(str, Length(min=11, max=11)),
+            Required('registration_name'): str,
+            Optional('address'): dict,
+            Optional('commercial_name'): str
+        }, extra=ALLOW_EXTRA)
+        customer = Schema({
+            Required('ruc'): All(str, Length(min=1, max=11))
+        }, extra=ALLOW_EXTRA)
+        schema = Schema({
+            Required('issue_date'): str,
+            Required('supplier'): supplier,
+            Required('customer'): customer,
+            Required('voucher_type'): str,
+            Required('currency'): str,
+            Required('voucher_number'): str,
+            Required('lines'): All(list, Length(min=1))
+        }, extra=ALLOW_EXTRA)
+        schema(self._data)
+
+    def generate_document_name(self):
+        """
+        Tipo de comprobante
+        01: Factura electronica
+        03: Boleta de venta
+        07: Nota de credito
+        08: Nota de debito
+        Serie del comprobante
+        FAAA: Facturas
+        BAAA: Boletas
+        """
+        # TODO: Add types as constants in diferent classes
+        return '{ruc}-{type}-{serial}-{correlative}'.format(
+            ruc=self._ruc,
+            type=self._data['voucher_type'],
+            serial=self._data['serial'],
+            correlative=self._data['correlative']
+        )
