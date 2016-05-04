@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
+
 import unittest
 from datetime import datetime
 
 from voluptuous import MultipleInvalid
 
-from models import Invoice
+from ..models import Invoice
 
 
 class InvoiceTestCase(unittest.TestCase):
@@ -47,6 +49,7 @@ class InvoiceTestCase(unittest.TestCase):
         doc = Invoice(ruc, {
             'serial': '123',
             'correlative': '123',
+            'voucher_type': '01'
         }, None)
         with self.assertRaises(MultipleInvalid):
             doc.validate()
