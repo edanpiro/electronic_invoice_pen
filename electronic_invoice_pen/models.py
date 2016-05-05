@@ -57,7 +57,9 @@ class Document(object):
 
         root = etree.fromstring(self._xml.encode('ISO-8859-1'), parser=etree.XMLParser(encoding='ISO-8859-1'))
         signed_root = xmldsig(root, digest_algorithm='sha1').sign(algorithm='rsa-sha1', key=key, cert=cert)
-        signed_root[0][2][0][0].attrib['Id'] = signed_root[8][0].text
+        signed_root.xpath('//ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/ds:Signature',
+                          namespaces={'ext':'urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2',
+                                      'ds': 'http://www.w3.org/2000/09/xmldsig#'})[0].attrib['Id'] = 'SignSUNAT'
         self._xml = etree.tostring(signed_root, encoding='ISO-8859-1')
 
         print (xmldsig(signed_root).verify(require_x509=True, x509_cert=cert,
