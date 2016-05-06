@@ -4,10 +4,10 @@ import base64
 import os
 import zipfile
 
-from jinja2 import Template, FileSystemLoader, Environment
+from jinja2 import FileSystemLoader, Environment
 from lxml import etree
-from signxml import xmldsig, methods
-from voluptuous import Schema, Required, All, Length, Range, ALLOW_EXTRA, Optional
+from signxml import xmldsig
+from voluptuous import Schema, Required, All, Length, ALLOW_EXTRA, Optional
 
 
 path_dir = os.path.dirname(os.path.realpath(__file__))
@@ -58,7 +58,7 @@ class Document(object):
         root = etree.fromstring(self._xml.encode('ISO-8859-1'), parser=etree.XMLParser(encoding='ISO-8859-1'))
         signed_root = xmldsig(root, digest_algorithm='sha1').sign(algorithm='rsa-sha1', key=key, cert=cert)
         signed_root.xpath('//ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/ds:Signature',
-                          namespaces={'ext':'urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2',
+                          namespaces={'ext': 'urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2',
                                       'ds': 'http://www.w3.org/2000/09/xmldsig#'})[0].attrib['Id'] = 'SignSUNAT'
         self._xml = etree.tostring(signed_root, encoding='ISO-8859-1')
 
