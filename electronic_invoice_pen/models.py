@@ -8,6 +8,7 @@ from jinja2 import FileSystemLoader, Environment
 from lxml import etree
 from signxml import xmldsig
 from voluptuous import Schema, Required, All, Length, ALLOW_EXTRA, Optional
+from cStringIO import StringIO
 
 
 path_dir = os.path.dirname(os.path.realpath(__file__))
@@ -33,6 +34,8 @@ class Document(object):
         self._client = client
         self._response = None
         self._zip_path = None
+        self.in_memory_data = StringIO()
+        self.in_memory_zip = zipfile.ZipFile(self.in_memory_data, "w", zipfile.ZIP_DEFLATED, False)
 
     def generate_document_name(self):
         """
@@ -67,18 +70,21 @@ class Document(object):
                                            hmac_key=None, validate_schema=True,
                                            parser=None, id_attribute=None))
 
+    def writetofile(self, filename, filecontent):
+        self.in_memory_zip.writestr(filename, filecontent)
+
     def prepare_zip(self):
         self._zip_filename = '{}.zip'.format(self._document_name)
         zf = zipfile.ZipFile(self._zip_filename, mode='w', compression=zipfile.ZIP_DEFLATED)
         nx = '{}.xml'.format(self._document_name)
-        zf.writestr(nx, self._xml)
-        zf.close()
-        self._zip_path = os.path.join(path_dir, self._zip_filename)
+        self.writetofile(nx, self._xml)
+        for zfile in self.in_memory_zip.filelist:
+            zfile.create_system = 0
+        self.in_memory_zip.close()
 
     def send(self):
-        with open(self._zip_path, 'rb') as zf:
-            encoded_content = base64.b64encode(zf.read())
-            self._response = self._client.send_bill(self._zip_filename, encoded_content)
+        encoded_content = base64.b64encode(self.in_memory_data.getvalue())
+        self._response = self._client.send_bill(self._zip_filename, encoded_content)
 
     def process_response(self):
         # save in disk response content
