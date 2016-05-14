@@ -75,7 +75,6 @@ class Document(object):
 
     def prepare_zip(self):
         self._zip_filename = '{}.zip'.format(self._document_name)
-        zf = zipfile.ZipFile(self._zip_filename, mode='w', compression=zipfile.ZIP_DEFLATED)
         nx = '{}.xml'.format(self._document_name)
         self.writetofile(nx, self._xml)
         for zfile in self.in_memory_zip.filelist:
